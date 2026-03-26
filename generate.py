@@ -2,16 +2,16 @@ import argparse
 
 import torch
 
-from config import GenerationConfig
+from config import GENERATION
 from model import load_model_and_tokenizer
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", required=True)
-    parser.add_argument("--max-new-tokens", type=int, default=GenerationConfig().max_new_tokens)
-    parser.add_argument("--temperature", type=float, default=GenerationConfig().temperature)
-    parser.add_argument("--top-p", type=float, default=GenerationConfig().top_p)
+    parser.add_argument("--max-new-tokens", type=int, default=GENERATION.max_new_tokens)
+    parser.add_argument("--temperature", type=float, default=GENERATION.temperature)
+    parser.add_argument("--top-p", type=float, default=GENERATION.top_p)
     return parser.parse_args()
 
 
@@ -29,7 +29,7 @@ def main():
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             top_p=args.top_p,
-            do_sample=True,
+            do_sample=GENERATION.do_sample,
             pad_token_id=tokenizer.pad_token_id,
         )
 

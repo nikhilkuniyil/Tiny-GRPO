@@ -1,18 +1,69 @@
 from dataclasses import dataclass
 from typing import Optional
 
+import torch
 
-MODEL_NAME = "HuggingFaceTB/SmolLM2-135M"
-TORCH_DTYPE = "auto"
-DEVICE_MAP = "auto"
-USE_FAST_TOKENIZER = True
-CACHE_DIR: Optional[str] = None
-DEFAULT_MAX_NEW_TOKENS = 128
+
+@dataclass(frozen=True)
+class ModelConfig:
+    name: str = "HuggingFaceTB/SmolLM2-135M"
+    torch_dtype: str = "auto"
+    device_map: str = "auto"
+    use_fast_tokenizer: bool = True
+    cache_dir: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class RuntimeConfig:
+    seed: int = 42
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    log_every: int = 10
+    save_every: int = 100
+
+
+@dataclass(frozen=True)
+class TrainingConfig:
+    batch_size: int = 8
+    learning_rate: float = 1e-5
+    weight_decay: float = 0.0
+    grad_accum_steps: int = 1
+    max_grad_norm: float = 1.0
+    num_epochs: int = 1
+    warmup_steps: int = 10
+    max_prompt_length: int = 128
+    max_completion_length: int = 128
+    max_sequence_length: int = 256
+
+
+@dataclass(frozen=True)
+class GRPOConfig:
+    group_size: int = 4
+    num_generations_per_prompt: int = 4
+    learning_rate: float = 1e-5
+    kl_beta: float = 0.04
+    clip_range: float = 0.2
+    max_prompt_length: int = 128
+    max_completion_length: int = 128
 
 
 @dataclass(frozen=True)
 class GenerationConfig:
-    max_new_tokens: int = DEFAULT_MAX_NEW_TOKENS
+    max_new_tokens: int = 128
     temperature: float = 0.8
     top_p: float = 0.95
     do_sample: bool = True
+
+
+MODEL = ModelConfig()
+RUNTIME = RuntimeConfig()
+TRAINING = TrainingConfig()
+GRPO = GRPOConfig()
+GENERATION = GenerationConfig()
+
+# Backward-compatible aliases for the current loader code.
+MODEL_NAME = MODEL.name
+TORCH_DTYPE = MODEL.torch_dtype
+DEVICE_MAP = MODEL.device_map
+USE_FAST_TOKENIZER = MODEL.use_fast_tokenizer
+CACHE_DIR = MODEL.cache_dir
+DEVICE = RUNTIME.device
