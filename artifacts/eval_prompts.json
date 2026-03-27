@@ -1,0 +1,258 @@
+[
+  {
+    "prompt": "Solve for x: 5x - 10 = -45",
+    "equation": "5x - 10 = -45",
+    "solution": -7,
+    "coefficient": 5,
+    "bias": -10,
+    "rhs": -45
+  },
+  {
+    "prompt": "Solve for x: -x - 3 = 0",
+    "equation": "-x - 3 = 0",
+    "solution": -3,
+    "coefficient": -1,
+    "bias": -3,
+    "rhs": 0
+  },
+  {
+    "prompt": "Solve for x: -3x + 7 = 28",
+    "equation": "-3x + 7 = 28",
+    "solution": -7,
+    "coefficient": -3,
+    "bias": 7,
+    "rhs": 28
+  },
+  {
+    "prompt": "Solve for x: -4x + 3 = -29",
+    "equation": "-4x + 3 = -29",
+    "solution": 8,
+    "coefficient": -4,
+    "bias": 3,
+    "rhs": -29
+  },
+  {
+    "prompt": "Solve for x: -5x - 8 = 42",
+    "equation": "-5x - 8 = 42",
+    "solution": -10,
+    "coefficient": -5,
+    "bias": -8,
+    "rhs": 42
+  },
+  {
+    "prompt": "Solve for x: -2x + 6 = 12",
+    "equation": "-2x + 6 = 12",
+    "solution": -3,
+    "coefficient": -2,
+    "bias": 6,
+    "rhs": 12
+  },
+  {
+    "prompt": "Solve for x: 4x + 7 = -33",
+    "equation": "4x + 7 = -33",
+    "solution": -10,
+    "coefficient": 4,
+    "bias": 7,
+    "rhs": -33
+  },
+  {
+    "prompt": "Solve for x: -2x + 7 = -13",
+    "equation": "-2x + 7 = -13",
+    "solution": 10,
+    "coefficient": -2,
+    "bias": 7,
+    "rhs": -13
+  },
+  {
+    "prompt": "Solve for x: x + 4 = 1",
+    "equation": "x + 4 = 1",
+    "solution": -3,
+    "coefficient": 1,
+    "bias": 4,
+    "rhs": 1
+  },
+  {
+    "prompt": "Solve for x: 4x - 10 = -18",
+    "equation": "4x - 10 = -18",
+    "solution": -2,
+    "coefficient": 4,
+    "bias": -10,
+    "rhs": -18
+  },
+  {
+    "prompt": "Solve for x: -3x = -9",
+    "equation": "-3x = -9",
+    "solution": 3,
+    "coefficient": -3,
+    "bias": 0,
+    "rhs": -9
+  },
+  {
+    "prompt": "Solve for x: -x - 4 = 2",
+    "equation": "-x - 4 = 2",
+    "solution": -6,
+    "coefficient": -1,
+    "bias": -4,
+    "rhs": 2
+  },
+  {
+    "prompt": "Solve for x: -4x + 2 = 34",
+    "equation": "-4x + 2 = 34",
+    "solution": -8,
+    "coefficient": -4,
+    "bias": 2,
+    "rhs": 34
+  },
+  {
+    "prompt": "Solve for x: -4x + 1 = -3",
+    "equation": "-4x + 1 = -3",
+    "solution": 1,
+    "coefficient": -4,
+    "bias": 1,
+    "rhs": -3
+  },
+  {
+    "prompt": "Solve for x: 4x - 9 = -17",
+    "equation": "4x - 9 = -17",
+    "solution": -2,
+    "coefficient": 4,
+    "bias": -9,
+    "rhs": -17
+  },
+  {
+    "prompt": "Solve for x: 2x - 7 = 7",
+    "equation": "2x - 7 = 7",
+    "solution": 7,
+    "coefficient": 2,
+    "bias": -7,
+    "rhs": 7
+  },
+  {
+    "prompt": "Solve for x: x + 7 = -1",
+    "equation": "x + 7 = -1",
+    "solution": -8,
+    "coefficient": 1,
+    "bias": 7,
+    "rhs": -1
+  },
+  {
+    "prompt": "Solve for x: -x + 9 = -1",
+    "equation": "-x + 9 = -1",
+    "solution": 10,
+    "coefficient": -1,
+    "bias": 9,
+    "rhs": -1
+  },
+  {
+    "prompt": "Solve for x: 4x - 8 = -24",
+    "equation": "4x - 8 = -24",
+    "solution": -4,
+    "coefficient": 4,
+    "bias": -8,
+    "rhs": -24
+  },
+  {
+    "prompt": "Solve for x: -5x - 1 = 14",
+    "equation": "-5x - 1 = 14",
+    "solution": -3,
+    "coefficient": -5,
+    "bias": -1,
+    "rhs": 14
+  },
+  {
+    "prompt": "Solve for x: -4x - 7 = 5",
+    "equation": "-4x - 7 = 5",
+    "solution": -3,
+    "coefficient": -4,
+    "bias": -7,
+    "rhs": 5
+  },
+  {
+    "prompt": "Solve for x: x + 4 = 2",
+    "equation": "x + 4 = 2",
+    "solution": -2,
+    "coefficient": 1,
+    "bias": 4,
+    "rhs": 2
+  },
+  {
+    "prompt": "Solve for x: 5x - 5 = 0",
+    "equation": "5x - 5 = 0",
+    "solution": 1,
+    "coefficient": 5,
+    "bias": -5,
+    "rhs": 0
+  },
+  {
+    "prompt": "Solve for x: -2x + 10 = 14",
+    "equation": "-2x + 10 = 14",
+    "solution": -2,
+    "coefficient": -2,
+    "bias": 10,
+    "rhs": 14
+  },
+  {
+    "prompt": "Solve for x: -4x + 10 = -26",
+    "equation": "-4x + 10 = -26",
+    "solution": 9,
+    "coefficient": -4,
+    "bias": 10,
+    "rhs": -26
+  },
+  {
+    "prompt": "Solve for x: -3x - 3 = -24",
+    "equation": "-3x - 3 = -24",
+    "solution": 7,
+    "coefficient": -3,
+    "bias": -3,
+    "rhs": -24
+  },
+  {
+    "prompt": "Solve for x: -3x + 2 = -10",
+    "equation": "-3x + 2 = -10",
+    "solution": 4,
+    "coefficient": -3,
+    "bias": 2,
+    "rhs": -10
+  },
+  {
+    "prompt": "Solve for x: -x + 7 = -3",
+    "equation": "-x + 7 = -3",
+    "solution": 10,
+    "coefficient": -1,
+    "bias": 7,
+    "rhs": -3
+  },
+  {
+    "prompt": "Solve for x: -2x - 9 = -9",
+    "equation": "-2x - 9 = -9",
+    "solution": 0,
+    "coefficient": -2,
+    "bias": -9,
+    "rhs": -9
+  },
+  {
+    "prompt": "Solve for x: -2x = 18",
+    "equation": "-2x = 18",
+    "solution": -9,
+    "coefficient": -2,
+    "bias": 0,
+    "rhs": 18
+  },
+  {
+    "prompt": "Solve for x: x - 8 = -10",
+    "equation": "x - 8 = -10",
+    "solution": -2,
+    "coefficient": 1,
+    "bias": -8,
+    "rhs": -10
+  },
+  {
+    "prompt": "Solve for x: -2x = -16",
+    "equation": "-2x = -16",
+    "solution": 8,
+    "coefficient": -2,
+    "bias": 0,
+    "rhs": -16
+  }
+]

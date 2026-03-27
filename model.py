@@ -5,7 +5,7 @@ from typing import Optional
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from config import CACHE_DIR, DEVICE_MAP, MODEL_NAME, TORCH_DTYPE, USE_FAST_TOKENIZER
+from config import CACHE_DIR, DEVICE, DEVICE_MAP, MODEL_NAME, TORCH_DTYPE, USE_FAST_TOKENIZER
 
 
 def resolve_torch_dtype(dtype_name: str):
@@ -35,24 +35,31 @@ def load_tokenizer():
 
 def load_model(
     *,
+    device: str = DEVICE,
     device_map: Optional[str] = DEVICE_MAP,
     torch_dtype: str = TORCH_DTYPE,
 ):
-    return AutoModelForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         device_map=device_map,
-        torch_dtype=resolve_torch_dtype(torch_dtype),
+        dtype=resolve_torch_dtype(torch_dtype),
         cache_dir=CACHE_DIR,
     )
+    if device_map is None:
+        model = model.to(device)
+    model.eval()
+    return model
 
 
 def load_model_and_tokenizer(
     *,
+    device: str = DEVICE,
     device_map: Optional[str] = DEVICE_MAP,
     torch_dtype: str = TORCH_DTYPE,
 ):
     tokenizer = load_tokenizer()
     model = load_model(
+        device=device,
         device_map=device_map,
         torch_dtype=torch_dtype,
     )

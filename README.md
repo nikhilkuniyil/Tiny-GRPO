@@ -21,6 +21,7 @@ the optimization code becomes much easier to understand.
 - `model.py`: shared Hugging Face model/tokenizer loader
 - `data.py`: synthetic equation generation, ground-truth solving, response parsing, and reward
 - `generate.py`: quick smoke test for loading the model and generating text
+- `eval.py`: fixed-set evaluation script that saves metrics and raw outputs for later comparison
 - `train_sft.py`: placeholder entry point for supervised fine-tuning
 - `grpo.py` and `train_grpo.py`: placeholder entry points for GRPO-specific logic
 
@@ -108,9 +109,44 @@ reward = exact_match_reward(model_response, example.solution)
 print(reward)
 ```
 
+## Evaluation baseline
+
+Before SFT or GRPO, run the raw base model on a small fixed held-out set:
+
+```bash
+python eval.py --stage base --num-examples 32
+```
+
+This script:
+
+- generates and saves a fixed prompt set in `artifacts/eval_prompts.json`
+- runs the current model on those prompts
+- parses the first integer from each response
+- computes exact-match reward and summary metrics
+- saves the full result set in `artifacts/base_eval.json`
+
+The key saved metrics are:
+
+- `accuracy`
+- `average_reward`
+- `parse_rate`
+- `invalid_output_rate`
+
+Later you can run the same script for other stages:
+
+```bash
+python eval.py --stage sft --num-examples 32
+python eval.py --stage grpo --num-examples 32
+```
+
+As long as you reuse the same `artifacts/eval_prompts.json`, those files are
+directly comparable.
+
+Use `--overwrite-eval-set` only when you intentionally want a new held-out set.
+
 ## Intended next step
 
-The next implementation step is to connect the current task loop into
+The next implementation step is to connect the current task and evaluation loop into
 `train_grpo.py`:
 
 1. Sample a batch of equations from `data.py`.

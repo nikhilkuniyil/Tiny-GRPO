@@ -8,7 +8,7 @@ import torch
 class ModelConfig:
     name: str = "HuggingFaceTB/SmolLM2-135M"
     torch_dtype: str = "auto"
-    device_map: str = "auto"
+    device_map: Optional[str] = None
     use_fast_tokenizer: bool = True
     cache_dir: Optional[str] = None
 
@@ -16,7 +16,9 @@ class ModelConfig:
 @dataclass(frozen=True)
 class RuntimeConfig:
     seed: int = 42
-    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    # Default to CPU for the teaching setup because it is the most stable path
+    # across local machines, including Apple Silicon.
+    device: str = "cpu"
     log_every: int = 10
     save_every: int = 100
 
