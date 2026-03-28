@@ -22,9 +22,9 @@ def resolve_torch_dtype(dtype_name: str):
     return mapping[dtype_name]
 
 
-def load_tokenizer():
+def load_tokenizer(model_source: str = MODEL_NAME):
     tokenizer = AutoTokenizer.from_pretrained(
-        MODEL_NAME,
+        model_source,
         use_fast=USE_FAST_TOKENIZER,
         cache_dir=CACHE_DIR,
     )
@@ -34,13 +34,14 @@ def load_tokenizer():
 
 
 def load_model(
+    model_source: str = MODEL_NAME,
     *,
     device: str = DEVICE,
     device_map: Optional[str] = DEVICE_MAP,
     torch_dtype: str = TORCH_DTYPE,
 ):
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
+        model_source,
         device_map=device_map,
         dtype=resolve_torch_dtype(torch_dtype),
         cache_dir=CACHE_DIR,
@@ -49,16 +50,18 @@ def load_model(
         model = model.to(device)
     model.eval()
     return model
-
+ 
 
 def load_model_and_tokenizer(
+    model_source: str = MODEL_NAME,
     *,
     device: str = DEVICE,
     device_map: Optional[str] = DEVICE_MAP,
     torch_dtype: str = TORCH_DTYPE,
 ):
-    tokenizer = load_tokenizer()
+    tokenizer = load_tokenizer(model_source=model_source)
     model = load_model(
+        model_source = model_source,
         device=device,
         device_map=device_map,
         torch_dtype=torch_dtype,

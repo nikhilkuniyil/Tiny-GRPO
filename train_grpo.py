@@ -1,13 +1,22 @@
 from config import MODEL_NAME
-from grpo import load_grpo_components
-
+from data import generate_dataset
+from grpo import generate_grouped_rollouts, load_grpo_components
 
 def main():
+    examples = generate_dataset(4, seed=42)
     components = load_grpo_components()
 
-    print(f"Loaded policy/reference models for GRPO: {MODEL_NAME}")
-    print(f"Tokenizer vocab size: {components['tokenizer'].vocab_size}")
-    print("Next step: add rollout generation, reward computation, and GRPO loss.")
+    rollouts = generate_grouped_rollouts(
+        components["policy_model"],
+        components["tokenizer"],
+        examples,
+    )
+
+    for rollout in rollouts:
+        print("PROMPT:", rollout.prompt)
+        for sample in rollout.samples:
+            print("  TEXT:", sample.text)
+            print("  REWARD:", sample.reward)
 
 
 if __name__ == "__main__":

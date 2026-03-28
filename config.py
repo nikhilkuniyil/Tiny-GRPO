@@ -3,6 +3,11 @@ from typing import Optional
 
 import torch
 
+@dataclass(frozen=True)
+class CheckpointConfig:
+    sft_checkpoint_dir: str = "artifacts/sft_model"
+    grpo_checkpoint_dir: str = "artifacts/grpo_model"
+
 
 @dataclass(frozen=True)
 class ModelConfig:
@@ -56,6 +61,7 @@ class GenerationConfig:
     do_sample: bool = True
 
 
+CHECKPOINTS = CheckpointConfig()
 MODEL = ModelConfig()
 RUNTIME = RuntimeConfig()
 TRAINING = TrainingConfig()

@@ -21,6 +21,24 @@ class EquationExample:
     rhs: int
 
 
+@dataclass(frozen=True)
+class SFTExample:
+    # SFT uses prompt -> bare integer target pairs so the model learns the
+    # response style we want before RL starts shaping rewards.
+    prompt: str
+    target: str
+    equation: str
+    solution: int
+
+
+CANONICAL_PROMPT_TEMPLATE = "Solve for x: {equation}"
+PROMPT_VARIANTS = (
+    "Find x: {equation}",
+    "What value of x solves {equation}?",
+    "Solve this equation for x: {equation}",
+)
+
+
 def format_linear_equation(coefficient: int, bias: int, rhs: int) -> str:
     if coefficient == 0:
         raise ValueError("Coefficient must be non-zero.")
@@ -87,6 +105,35 @@ def generate_equation_example(
 def generate_dataset(num_examples: int, *, seed: int = 42) -> list[EquationExample]:
     rng = random.Random(seed)
     return [generate_equation_example(rng=rng) for _ in range(num_examples)]
+
+
+def render_sft_prompt(equation: str, *, rng: Optional[random.Random] = None, canonical_probability: float = 0.85) -> str:
+    rng = rng or random.Random()
+
+    # Keep most prompts in one format so the task stays easy to learn, while a
+    # small slice of variants prevents overfitting to a single surface form.
+    if rng.random() < canonical_probability:
+        return CANONICAL_PROMPT_TEMPLATE.format(equation=equation)
+    return rng.choice(PROMPT_VARIANTS).format(equation=equation)
+
+
+def generate_sft_example(*, rng: Optional[random.Random] = None) -> SFTExample:
+    example = generate_equation_example(rng=rng)
+    prompt = render_sft_prompt(example.equation, rng=rng)
+
+    return SFTExample(
+        prompt=prompt,
+        # The target is intentionally just the integer so SFT teaches the
+        # shortest useful answer format for the later reward function.
+        target=str(example.solution),
+        equation=example.equation,
+        solution=example.solution,
+    )
+
+
+def generate_sft_dataset(num_examples: int, *, seed: int = 42) -> list[SFTExample]:
+    rng = random.Random(seed)
+    return [generate_sft_example(rng=rng) for _ in range(num_examples)]
 
 
 def extract_first_integer(text: str) -> Optional[int]:
