@@ -21,8 +21,7 @@ class ModelConfig:
 @dataclass(frozen=True)
 class RuntimeConfig:
     seed: int = 42
-    # Default to CPU for the teaching setup because it is the most stable path
-    # across local machines, including Apple Silicon.
+    # Default to CPU for this teaching setup 
     device: str = "cpu"
     log_every: int = 10
     save_every: int = 100
