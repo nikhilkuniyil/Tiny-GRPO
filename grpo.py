@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import torch
+import random
 
 from config import CHECKPOINTS, GENERATION, GRPO, RUNTIME
 from data import exact_match_reward
@@ -189,7 +190,7 @@ def generate_grouped_rollouts(model, tokenizer, examples):
     return grouped_rollouts
 
 # Group reward normalization
-def compute_group_advantages(rollouts, eps):
+def compute_group_advantages(rollouts, eps = 1e-8):
     scored_samples = []
 
     for rollout in rollouts:
@@ -209,12 +210,24 @@ def compute_group_advantages(rollouts, eps):
                     prompt=rollout.prompt,
                     target=rollout.target,
                     completion_ids=sample.completion_ids,
+                    completion_text=sample.text,
                     reward=sample.reward,
                     advantage=advantage.item(),
                     stopped_by_eos=sample.stopped_by_eos,
                 )
             )
     return scored_samples
+
+# Helper function to shufle scored samples
+def iter_minibatches(scored_samples, minibatch_size, seed):
+    indices = list(range(len(scored_samples)))
+    random.Random(seed).shuffle(indices)
+
+    for start in range(0, len(indices), minibatch_size):
+        batch_indices = indices[start : start + minibatch_size]
+        # Yields small minibatch chunks for optimization
+        yield [scored_samples[i] for i in batch_indices]
+
 
 # Helper function to build prompt + completion sequences
 def build_completion_training_batch(scored_samples, tokenizer):
@@ -253,7 +266,7 @@ def build_completion_training_batch(scored_samples, tokenizer):
             padding_value=0,
     )
     completion_mask = torch.nn.utils.rnn.pad_sequence(
-            attention_mask_rows,
+            completion_mask_rows,
             batch_first=True,
             padding_value=0,
     )
@@ -291,9 +304,8 @@ def masked_mean(values, mask, dim=-1, eps: float = 1e-8):
     return (values * mask).sum(dim=dim) / (mask.sum(dim=dim) + eps)
 
 # GRPO loss function
-def compute_grpo_loss(policy_model, reference_model, tokenizer, rollouts):
+def compute_grpo_loss_from_scored_samples(policy_model, reference_model, tokenizer, scored_samples):
     # Compute advantages
-    scored_samples = compute_group_advantages(rollouts)
     batch = build_completion_training_batch(scored_samples, tokenizer)
 
     # Recompute policy logprobs, giving one scalar per sampled completion
@@ -319,6 +331,7 @@ def compute_grpo_loss(policy_model, reference_model, tokenizer, rollouts):
 
     # If no reference model we do not enforce KL constraint
     if reference_model is None:
+        metrics["total_loss"] = policy_loss.item()
         return policy_loss, metrics
     
     # Compute logprobs with reference model
@@ -333,7 +346,7 @@ def compute_grpo_loss(policy_model, reference_model, tokenizer, rollouts):
     total_loss = policy_loss + kl_loss
 
     metrics["kl_loss"] = kl_loss.item()
-    metrics["mean_kl"] = kl_per_sequence.mean()
+    metrics["mean_kl"] = kl_per_sequence.mean().item()
     metrics["total_loss"] = total_loss.item()
 
     return total_loss, metrics

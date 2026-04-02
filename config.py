@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import torch
+import random
 
 @dataclass(frozen=True)
 class CheckpointConfig:
@@ -50,6 +51,8 @@ class GRPOConfig:
     clip_range: float = 0.2
     max_prompt_length: int = 128
     max_completion_length: int = 128
+    num_update_epochs: int = 2
+    minibatch_size: int = 8
 
 
 @dataclass(frozen=True)
