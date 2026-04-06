@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 import torch
-import random
 
 @dataclass(frozen=True)
 class CheckpointConfig:
@@ -35,7 +34,7 @@ class TrainingConfig:
     weight_decay: float = 0.0
     grad_accum_steps: int = 1
     max_grad_norm: float = 1.0
-    num_epochs: int = 1
+    num_epochs: int = 3
     warmup_steps: int = 10
     max_prompt_length: int = 128
     max_completion_length: int = 128
@@ -57,9 +56,9 @@ class GRPOConfig:
 
 @dataclass(frozen=True)
 class GenerationConfig:
-    max_new_tokens: int = 128
-    temperature: float = 0.8
-    top_p: float = 0.95
+    max_new_tokens: int = 32
+    temperature: float = 0.7
+    top_p: float = 0.9
     do_sample: bool = True
 
 

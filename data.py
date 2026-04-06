@@ -31,12 +31,18 @@ class SFTExample:
     solution: int
 
 
-CANONICAL_PROMPT_TEMPLATE = "Solve for x: {equation}"
+CANONICAL_PROMPT_TEMPLATE = "Solve for x: {equation}\nAnswer with only the integer value of x."
 PROMPT_VARIANTS = (
-    "Find x: {equation}",
-    "What value of x solves {equation}?",
-    "Solve this equation for x: {equation}",
+    "Find x: {equation}\nReturn only the integer answer.",
+    "What value of x solves {equation}?\nAnswer with only the integer.",
+    "Solve this equation for x: {equation}\nWrite only the integer value of x.",
 )
+
+
+def format_generation_prompt(prompt: str) -> str:
+    # SFT teaches the model to continue after an explicit "Answer:" cue, so
+    # inference should use that same suffix to avoid train/inference mismatch.
+    return f"{prompt}\nAnswer:"
 
 
 def format_linear_equation(coefficient: int, bias: int, rhs: int) -> str:
@@ -70,12 +76,12 @@ def solve_linear_equation(coefficient: int, bias: int, rhs: int) -> int:
 
 def generate_equation_example(
     *,
-    min_solution: int = -10,
-    max_solution: int = 10,
-    min_coefficient: int = -5,
-    max_coefficient: int = 5,
-    min_bias: int = -10,
-    max_bias: int = 10,
+    min_solution: int = -8,
+    max_solution: int = 8,
+    min_coefficient: int = -4,
+    max_coefficient: int = 4,
+    min_bias: int = -8,
+    max_bias: int = 8,
     rng: Optional[random.Random] = None,
 ) -> EquationExample:
     rng = rng or random.Random()
@@ -93,7 +99,7 @@ def generate_equation_example(
     equation = format_linear_equation(coefficient, bias, rhs)
 
     return EquationExample(
-        prompt=f"Solve for x: {equation}",
+        prompt=CANONICAL_PROMPT_TEMPLATE.format(equation=equation),
         equation=equation,
         solution=solution,
         coefficient=coefficient,

@@ -26,7 +26,7 @@ class SFTDataset(Dataset):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num-examples", type=int, default=256)
+    parser.add_argument("--num-examples", type=int, default=2048)
     parser.add_argument("--output-dir", default="artifacts/sft_model")
     return parser.parse_args()
 

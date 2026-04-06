@@ -7,8 +7,8 @@ from pathlib import Path
 
 import torch
 
-from config import GENERATION, MODEL_NAME, RUNTIME
-from data import EquationExample, exact_match_reward, extract_first_integer, generate_dataset
+from config import CHECKPOINTS, GENERATION, MODEL_NAME, RUNTIME
+from data import EquationExample, exact_match_reward, extract_first_integer, format_generation_prompt, generate_dataset
 from model import load_model_and_tokenizer
 
 
@@ -51,10 +51,22 @@ def get_eval_examples(num_examples: int, overwrite: bool) -> list[EquationExampl
     return examples
 
 
+def resolve_model_source(stage: str) -> str:
+    if stage == "base":
+        return MODEL_NAME
+    if stage == "sft":
+        return CHECKPOINTS.sft_checkpoint_dir
+    if stage == "grpo":
+        return CHECKPOINTS.grpo_checkpoint_dir
+    return MODEL_NAME
+
+
 def generate_response(model, tokenizer, prompt: str, *, max_new_tokens: int, temperature: float, top_p: float) -> str:
-    inputs = tokenizer(prompt, return_tensors="pt")
+    generation_prompt = format_generation_prompt(prompt)
+    inputs = tokenizer(generation_prompt, return_tensors="pt")
     model_device = next(model.parameters()).device
     inputs = {key: value.to(model_device) for key, value in inputs.items()}
+    prompt_length = inputs["input_ids"].shape[1]
 
     with torch.no_grad():
         # Keep generation settings explicit here because these choices affect
@@ -68,11 +80,20 @@ def generate_response(model, tokenizer, prompt: str, *, max_new_tokens: int, tem
             pad_token_id=tokenizer.pad_token_id,
         )
 
-    return tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    # Only score the generated completion, not the original prompt tokens.
+    completion_ids = output_ids[0][prompt_length:]
+    return tokenizer.decode(completion_ids, skip_special_tokens=True)
 
 
-def evaluate_examples(examples: list[EquationExample], *, max_new_tokens: int, temperature: float, top_p: float):
-    model, tokenizer = load_model_and_tokenizer()
+def evaluate_examples(
+    examples: list[EquationExample],
+    *,
+    model_source: str,
+    max_new_tokens: int,
+    temperature: float,
+    top_p: float,
+):
+    model, tokenizer = load_model_and_tokenizer(model_source=model_source)
     results = []
 
     for example in examples:
@@ -103,7 +124,7 @@ def evaluate_examples(examples: list[EquationExample], *, max_new_tokens: int, t
     return results
 
 
-def summarize_results(results: list[dict], stage: str) -> dict:
+def summarize_results(results: list[dict], stage: str, model_source: str) -> dict:
     num_examples = len(results)
     num_parsed = sum(result["parsed_output"] is not None for result in results)
     num_correct = sum(result["reward"] == 1.0 for result in results)
@@ -112,7 +133,7 @@ def summarize_results(results: list[dict], stage: str) -> dict:
     # are the same quantity, but both names are useful for clarity.
     return {
         "stage": stage,
-        "model_name": MODEL_NAME,
+        "model_name": model_source,
         "num_examples": num_examples,
         "accuracy": num_correct / num_examples if num_examples else 0.0,
         "average_reward": sum(result["reward"] for result in results) / num_examples if num_examples else 0.0,
@@ -171,14 +192,16 @@ def print_example_analysis(results: list[dict], *, max_incorrect: int = 3, max_c
 
 def main():
     args = parse_args()
+    model_source = resolve_model_source(args.stage)
     examples = get_eval_examples(args.num_examples, args.overwrite_eval_set)
     results = evaluate_examples(
         examples,
+        model_source=model_source,
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,
         top_p=args.top_p,
     )
-    summary = summarize_results(results, stage=args.stage)
+    summary = summarize_results(results, stage=args.stage, model_source=model_source)
     output_path = save_results(args.stage, summary, results)
 
     print_summary(summary)

@@ -4,12 +4,13 @@ import torch
 import random
 
 from config import CHECKPOINTS, GENERATION, GRPO, RUNTIME
-from data import exact_match_reward
+from data import exact_match_reward, format_generation_prompt
 from model import load_model_and_tokenizer
 
 
 @dataclass
 class CompletionSample:
+    # One sampled completion for one prompt during rollout collection.
     text: str
     completion_ids: list[int]
     logprobs: list[float]
@@ -19,6 +20,7 @@ class CompletionSample:
 
 @dataclass
 class PromptRollout:
+    # Groups the G sampled completions that came from the same prompt.
     prompt: str
     target: int
     samples: list[CompletionSample]
@@ -26,6 +28,7 @@ class PromptRollout:
 
 @dataclass
 class ScoredSample:
+    # Training-time view of a sampled completion after reward normalization.
     prompt: str
     target: int
     completion_ids: list[int]
@@ -63,6 +66,8 @@ def sample_next_token_with_logprob(
         raise ValueError("top_p must be in (0, 1].")
 
     scaled_logits = logits / temperature
+    # These logprobs come from the full policy distribution after temperature
+    # scaling, even if we later sample from a truncated top-p distribution.
     full_logprobs = torch.log_softmax(scaled_logits, dim=-1)
     full_probs = torch.exp(full_logprobs)
 
@@ -92,8 +97,10 @@ def generate_grouped_rollouts(model, tokenizer, examples):
     expanded_prompts = []
     expanded_targets = []
     for prompt, target in zip(prompts, targets):
+        # Repeat each prompt G times so we can sample a group of completions
+        # for that same prompt in one batched generation pass.
         for _ in range(GRPO.group_size):
-            expanded_prompts.append(prompt)
+            expanded_prompts.append(format_generation_prompt(prompt))
             expanded_targets.append(target)
 
     encoded = tokenizer(
@@ -108,6 +115,7 @@ def generate_grouped_rollouts(model, tokenizer, examples):
     attention_mask = encoded["attention_mask"].to(RUNTIME.device)
 
     batch_size = input_ids.size(0)
+    # These lists store completion-only data. Prompt tokens stay separate.
     generated_token_lists = [[] for _ in range(batch_size)]
     generated_logprob_lists = [[] for _ in range(batch_size)]
     finished = torch.zeros(batch_size, dtype=torch.bool, device=RUNTIME.device)
@@ -118,6 +126,7 @@ def generate_grouped_rollouts(model, tokenizer, examples):
     for _ in range(GENERATION.max_new_tokens):
         with torch.no_grad():
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            # We only need the next-token distribution at the current sequence end.
             next_token_logits = outputs.logits[:, -1, :]
 
         next_tokens, next_logprobs = sample_next_token_with_logprob(
@@ -128,6 +137,8 @@ def generate_grouped_rollouts(model, tokenizer, examples):
 
         next_tokens = torch.where(
             finished,
+            # Once a sequence is finished, we keep shapes aligned by appending pad
+            # tokens on later steps instead of sampling more real tokens.
             torch.full_like(next_tokens, tokenizer.pad_token_id),
             next_tokens,
         )
@@ -146,6 +157,8 @@ def generate_grouped_rollouts(model, tokenizer, examples):
 
         input_ids = torch.cat([input_ids, next_tokens.unsqueeze(-1)], dim=1)
 
+        # Every appended token remains visible in the autoregressive context.
+        # Finished sequences stop evolving because later steps inject pad tokens.
         new_attention_column = torch.ones(
             batch_size,
             1,
@@ -173,7 +186,7 @@ def generate_grouped_rollouts(model, tokenizer, examples):
             )
         )
 
-    # Each rollout in the list contains the prompt as well as its G completions and target
+    # Regroup the flattened batch back into one record per original prompt.
     grouped_rollouts = []
     cursor = 0
     for prompt, target in zip(prompts, targets):
@@ -194,16 +207,19 @@ def compute_group_advantages(rollouts, eps = 1e-8):
     scored_samples = []
 
     for rollout in rollouts:
-        # For each prompt group, collect its G rewards
+        # GRPO compares completions within the same prompt group, not across
+        # unrelated prompts, so normalization happens per rollout group.
         rewards = torch.tensor([sample.reward for sample in rollout.samples], dtype=torch.float32)
-        # Compute mean, std inside this group
+        # Compute mean/std inside this group only.
         reward_mean = rewards.mean()
         reward_std = rewards.std(unbiased=False)
 
-        # convert each reward into a relative advantage
+        # Positive advantage means "better than the other samples for this
+        # prompt"; negative means "worse than the others".
         normalized_advantages = (rewards - reward_mean) / (reward_std + eps)
 
-        # flatten the results into a list of ScoredSample
+        # Flatten grouped rollouts into training examples after the group-wise
+        # normalization has already been computed.
         for sample, advantage in zip(rollout.samples, normalized_advantages):
             scored_samples.append(
                 ScoredSample(
@@ -218,25 +234,26 @@ def compute_group_advantages(rollouts, eps = 1e-8):
             )
     return scored_samples
 
-# Helper function to shufle scored samples
+# Helper function to shuffle scored samples into optimizer minibatches.
 def iter_minibatches(scored_samples, minibatch_size, seed):
     indices = list(range(len(scored_samples)))
     random.Random(seed).shuffle(indices)
 
     for start in range(0, len(indices), minibatch_size):
         batch_indices = indices[start : start + minibatch_size]
-        # Yields small minibatch chunks for optimization
+        # Minibatching happens after reward normalization, not before.
         yield [scored_samples[i] for i in batch_indices]
 
 
-# Helper function to build prompt + completion sequences
+# Reconstruct prompt + completion sequences for logprob recomputation.
 def build_completion_training_batch(scored_samples, tokenizer):
     input_id_rows = []
     attention_mask_rows = []
     completion_mask_rows = []
 
     for sample in scored_samples:
-        # Combine ids for both the prompt and completion tokens
+        # Re-encode the prompt so we can score the sampled completion under the
+        # current policy and the frozen reference model.
         prompt_ids = tokenizer(
             sample.prompt,
             add_special_tokens=False,
@@ -248,7 +265,8 @@ def build_completion_training_batch(scored_samples, tokenizer):
         full_ids = prompt_ids + completion_ids
 
         attention_mask = [1] * len(full_ids)
-        # To ensure that we are only learning from completion tokens, we mask out prompt tokens
+        # Prompt tokens are context only. The GRPO objective should apply only
+        # to generated completion tokens.
         completion_mask = [0] * len(prompt_ids) + [1] * len(completion_ids)
 
         input_id_rows.append(torch.tensor(full_ids, dtype=torch.long))
@@ -277,19 +295,20 @@ def build_completion_training_batch(scored_samples, tokenizer):
         "completion_mask": completion_mask.to(RUNTIME.device)
     }
 
-# Helper function to compute completion-only token logprobs
+# Recompute token logprobs on the full prompt+completion sequence.
 def compute_completion_logprobs(model, batch):
     outputs = model(
         input_ids=batch["input_ids"],
         attention_mask=batch["attention_mask"]
     )
 
-    # Since language models predict token t from the tokens before it, we shift:
+    # Language models predict token t from the tokens before it, so we shift
+    # logits and target ids by one position.
     logits = outputs.logits[:, :-1, :]
     target_ids = batch["input_ids"][:, 1:]
     target_completion_mask = batch["completion_mask"][:, 1:]
 
-    # Gather the log prob of the actual next token
+    # Gather the logprob assigned to the actual sampled next token at each step.
     logprobs = torch.log_softmax(logits, dim=-1)
     selected_logprobs = logprobs.gather(-1, target_ids.unsqueeze(-1)).squeeze(-1)
 
@@ -297,19 +316,20 @@ def compute_completion_logprobs(model, batch):
     # a mask saying which of those belong to the completion
     return selected_logprobs, target_completion_mask
 
-# Helper function to average only over completion tokens
+# Average only over positions marked as completion tokens.
 def masked_mean(values, mask, dim=-1, eps: float = 1e-8):
     mask = mask.float()
     # Average only over positions where mask is 1 (completion-token positions)
     return (values * mask).sum(dim=dim) / (mask.sum(dim=dim) + eps)
 
-# GRPO loss function
+# Core GRPO loss on already-scored samples.
 def compute_grpo_loss_from_scored_samples(policy_model, reference_model, tokenizer, scored_samples):
-    # Compute advantages
+    # Build the sequences needed to recompute current policy/reference
+    # logprobs for exactly the sampled completions.
     batch = build_completion_training_batch(scored_samples, tokenizer)
 
-    # Recompute policy logprobs, giving one scalar per sampled completion
-    # Average logprob over just the generated tokens
+    # Collapse token-level logprobs into one scalar per completion by averaging
+    # only over generated completion positions.
     policy_token_logprobs, completion_mask = compute_completion_logprobs(policy_model, batch)
     policy_sequence_logprobs = masked_mean(policy_token_logprobs, completion_mask)
 
@@ -319,8 +339,8 @@ def compute_grpo_loss_from_scored_samples(policy_model, reference_model, tokeniz
         device=policy_sequence_logprobs.device,
     )
 
-    # Positive advantage should incraese the possibility of the sampled completion 
-    # Negative advantage should decrease it
+    # Positive advantage should increase the probability of the sampled
+    # completion. Negative advantage should decrease it.
     policy_loss = -(advantages * policy_sequence_logprobs).mean()
 
     metrics = {
@@ -329,16 +349,18 @@ def compute_grpo_loss_from_scored_samples(policy_model, reference_model, tokeniz
         "mean_reward": sum(sample.reward for sample in scored_samples) / len(scored_samples),
     }
 
-    # If no reference model we do not enforce KL constraint
+    # If there is no reference model, this reduces to the pure policy term.
     if reference_model is None:
         metrics["total_loss"] = policy_loss.item()
         return policy_loss, metrics
     
-    # Compute logprobs with reference model
+    # Reference logprobs are recomputed on the same sampled tokens, but without
+    # gradients because the reference model stays frozen.
     with torch.no_grad():
         reference_token_logprobs, _ = compute_completion_logprobs(reference_model, batch)
     
-    # KL stabilization preventing current policy from drifting too agressively from the frozen reference
+    # This is a sampled-token KL-style stabilization term. It is not the exact
+    # full KL over the whole vocabulary, but it is a simpler educational proxy.
     token_logprob_diff = policy_token_logprobs - reference_token_logprobs
     kl_per_sequence = masked_mean(token_logprob_diff, completion_mask)
     kl_loss = GRPO.kl_beta * kl_per_sequence.mean()
