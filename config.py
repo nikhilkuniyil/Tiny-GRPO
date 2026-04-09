@@ -52,6 +52,9 @@ class GRPOConfig:
     max_completion_length: int = 128
     num_update_epochs: int = 2
     minibatch_size: int = 8
+    num_rollout_prompts: int = 4
+    num_outer_steps: int = 3
+    save_every_steps: int = 1
 
 
 @dataclass(frozen=True)

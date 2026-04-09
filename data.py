@@ -6,7 +6,16 @@ from dataclasses import dataclass
 from typing import Optional
 
 
-INTEGER_PATTERN = re.compile(r"(?<![\w-])[+-]?\d+")
+# Strict answer parser for this teaching repo. We intentionally reward only
+# short answer-like outputs instead of arbitrary text that happens to contain
+# the correct integer somewhere inside it.
+ANSWER_LINE_PATTERNS = (
+    re.compile(r"^\s*([+-]?\d+)\s*$"),
+    re.compile(r"^\s*([+-]?\d+)\s*[.!]\s*$"),
+    re.compile(r"^\s*x\s*=\s*([+-]?\d+)\s*$", re.IGNORECASE),
+    re.compile(r"^\s*answer\s*:\s*([+-]?\d+)\s*$", re.IGNORECASE),
+    re.compile(r"^\s*answer\s*:\s*x\s*=\s*([+-]?\d+)\s*$", re.IGNORECASE),
+)
 
 
 @dataclass(frozen=True)
@@ -143,15 +152,25 @@ def generate_sft_dataset(num_examples: int, *, seed: int = 42) -> list[SFTExampl
 
 
 def extract_first_integer(text: str) -> Optional[int]:
-    # GRPO should reward the answer, not exact formatting, so we accept
-    # responses like "x = 5" or "The answer is -3".
-    match = INTEGER_PATTERN.search(text)
-    if match is None:
+    # We score only the first non-empty line so long rambly completions do not
+    # get credit merely for containing the target integer somewhere later.
+    for line in text.splitlines():
+        stripped_line = line.strip()
+        if not stripped_line:
+            continue
+
+        for pattern in ANSWER_LINE_PATTERNS:
+            match = pattern.match(stripped_line)
+            if match is not None:
+                return int(match.group(1))
+
         return None
-    return int(match.group())
+
+    return None
 
 
 def exact_match_reward(response_text: str, target_answer: int) -> float:
-    # v1 reward is intentionally binary and deterministic.
+    # Reward is binary and deterministic, but now only for outputs that look
+    # like actual answer lines such as "-3", "x = -3", or "Answer: -3".
     predicted_answer = extract_first_integer(response_text)
     return 1.0 if predicted_answer == target_answer else 0.0

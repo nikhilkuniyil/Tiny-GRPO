@@ -190,19 +190,39 @@ def print_example_analysis(results: list[dict], *, max_incorrect: int = 3, max_c
             print_example_block(result)
 
 
-def main():
-    args = parse_args()
-    model_source = resolve_model_source(args.stage)
-    examples = get_eval_examples(args.num_examples, args.overwrite_eval_set)
+def run_evaluation(
+    *,
+    stage: str,
+    num_examples: int = 32,
+    overwrite_eval_set: bool = False,
+    max_new_tokens: int = GENERATION.max_new_tokens,
+    temperature: float = GENERATION.temperature,
+    top_p: float = GENERATION.top_p,
+):
+    model_source = resolve_model_source(stage)
+    examples = get_eval_examples(num_examples, overwrite_eval_set)
     results = evaluate_examples(
         examples,
         model_source=model_source,
+        max_new_tokens=max_new_tokens,
+        temperature=temperature,
+        top_p=top_p,
+    )
+    summary = summarize_results(results, stage=stage, model_source=model_source)
+    output_path = save_results(stage, summary, results)
+    return summary, results, output_path
+
+
+def main():
+    args = parse_args()
+    summary, results, output_path = run_evaluation(
+        stage=args.stage,
+        num_examples=args.num_examples,
+        overwrite_eval_set=args.overwrite_eval_set,
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,
         top_p=args.top_p,
     )
-    summary = summarize_results(results, stage=args.stage, model_source=model_source)
-    output_path = save_results(args.stage, summary, results)
 
     print_summary(summary)
     print()

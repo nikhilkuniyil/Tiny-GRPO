@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 
 artifacts/sft_model/
+artifacts/grpo_model/

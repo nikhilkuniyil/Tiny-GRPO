@@ -7,13 +7,32 @@ The point of the project is to make the reward loop obvious before adding
 the full GRPO update. If the task, parser, and reward are easy to inspect,
 the optimization code becomes much easier to understand.
 
+The current goal of the repo is not just to implement GRPO, but to show
+measurable evidence that GRPO improves performance over a base model and an
+SFT-only baseline on the same held-out task.
+
 ## Current scope
 
 - Hard-coded base model: `HuggingFaceTB/SmolLM2-135M`
 - Synthetic math task in `data.py`
 - Deterministic integer parser
 - Binary exact-match reward
-- Minimal model-loading and generation scaffold
+- SFT training loop
+- GRPO rollout, loss, and outer training loop
+- Evaluation and metric logging for base vs SFT vs GRPO comparison
+
+## Current results
+
+Using a fixed 32-example held-out set, the current repo produces:
+
+| Stage | Model source | Accuracy | Parse rate |
+|---|---|---:|---:|
+| Base | `HuggingFaceTB/SmolLM2-135M` | `0.031` | `1.000` |
+| SFT | `artifacts/sft_model` | `0.031` | `1.000` |
+| GRPO | `artifacts/grpo_model` | `0.156` | `1.000` |
+
+At the moment, most of the gain comes from GRPO improving answer selection on
+top of a weak-but-format-aligned SFT checkpoint.
 
 ## Project structure
 
@@ -22,8 +41,9 @@ the optimization code becomes much easier to understand.
 - `data.py`: synthetic equation generation, ground-truth solving, response parsing, and reward
 - `generate.py`: quick smoke test for loading the model and generating text
 - `eval.py`: fixed-set evaluation script that saves metrics and raw outputs for later comparison
-- `train_sft.py`: placeholder entry point for supervised fine-tuning
-- `grpo.py` and `train_grpo.py`: placeholder entry points for GRPO-specific logic
+- `train_sft.py`: supervised fine-tuning entry point for teaching the answer format
+- `grpo.py`: grouped rollout collection, reward normalization, and GRPO loss
+- `train_grpo.py`: GRPO outer loop, minibatch updates, checkpoint saving, and training logs
 
 ## Why start with synthetic equations
 
@@ -144,13 +164,48 @@ directly comparable.
 
 Use `--overwrite-eval-set` only when you intentionally want a new held-out set.
 
-## Intended next step
+## Evidence-first workflow
 
-The next implementation step is to connect the current task and evaluation loop into
-`train_grpo.py`:
+This repo is designed around direct comparisons on the same task:
 
-1. Sample a batch of equations from `data.py`.
-2. Generate multiple responses per prompt.
-3. Parse each response into an integer.
-4. Compute exact-match rewards.
-5. Use those rewards inside the GRPO loss.
+1. Evaluate the base model.
+2. Train and evaluate the SFT checkpoint.
+3. Train and evaluate the GRPO checkpoint.
+
+The main outputs to compare are:
+
+- `artifacts/base_eval.json`
+- `artifacts/sft_eval.json`
+- `artifacts/grpo_eval.json`
+- `artifacts/grpo_training_log.json`
+
+That means the repo is not only demonstrating how GRPO is coded, but also
+showing whether it actually improves exact-match accuracy on this toy task.
+
+## Tracking GRPO experiments
+
+`train_grpo.py` now runs an outer RL loop:
+
+1. Generate fresh prompts.
+2. Sample grouped completions from the current policy.
+3. Compute rewards and within-group advantages.
+4. Reuse that rollout batch for multiple update epochs and minibatches.
+5. Save the latest GRPO checkpoint.
+6. Save rollout/update metrics to `artifacts/grpo_training_log.json`.
+
+This makes it easy to vary `GRPO.num_outer_steps` in `config.py` and compare:
+
+- reward hit rate by outer step
+- loss/KL trends by minibatch
+- held-out accuracy after different numbers of GRPO outer steps
+
+Suggested workflow:
+
+```bash
+python3 train_grpo.py
+python3 eval.py --stage grpo --num-examples 32 --overwrite-eval-set
+```
+
+If you want to study scaling with outer steps, change `GRPO.num_outer_steps`,
+rerun training, and compare the resulting `artifacts/grpo_training_log.json`
+and `artifacts/grpo_eval.json`.

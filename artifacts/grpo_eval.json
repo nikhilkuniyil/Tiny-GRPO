@@ -1,0 +1,269 @@
+{
+  "summary": {
+    "stage": "grpo",
+    "model_name": "artifacts/grpo_model",
+    "num_examples": 32,
+    "accuracy": 0.15625,
+    "average_reward": 0.15625,
+    "parse_rate": 1.0,
+    "invalid_output_rate": 0.0
+  },
+  "results": [
+    {
+      "prompt": "Solve for x: -3x = 24\nAnswer with only the integer value of x.",
+      "equation": "-3x = 24",
+      "target": -8,
+      "raw_output": " -6",
+      "parsed_output": -6,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -x - 4 = -3\nAnswer with only the integer value of x.",
+      "equation": "-x - 4 = -3",
+      "target": -1,
+      "raw_output": " -7",
+      "parsed_output": -7,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -3x + 5 = 23\nAnswer with only the integer value of x.",
+      "equation": "-3x + 5 = 23",
+      "target": -6,
+      "raw_output": " 3",
+      "parsed_output": 3,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -4x - 6 = 26\nAnswer with only the integer value of x.",
+      "equation": "-4x - 6 = 26",
+      "target": -8,
+      "raw_output": " -3",
+      "parsed_output": -3,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -x + 8 = 9\nAnswer with only the integer value of x.",
+      "equation": "-x + 8 = 9",
+      "target": -1,
+      "raw_output": " -1",
+      "parsed_output": -1,
+      "reward": 1.0
+    },
+    {
+      "prompt": "Solve for x: -4x + 5 = 13\nAnswer with only the integer value of x.",
+      "equation": "-4x + 5 = 13",
+      "target": -2,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 1.0
+    },
+    {
+      "prompt": "Solve for x: -x = -6\nAnswer with only the integer value of x.",
+      "equation": "-x = -6",
+      "target": 6,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -4x + 5 = 17\nAnswer with only the integer value of x.",
+      "equation": "-4x + 5 = 17",
+      "target": -3,
+      "raw_output": " 2",
+      "parsed_output": 2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: x - 4 = -4\nAnswer with only the integer value of x.",
+      "equation": "x - 4 = -4",
+      "target": 0,
+      "raw_output": " -3",
+      "parsed_output": -3,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -x - 5 = -7\nAnswer with only the integer value of x.",
+      "equation": "-x - 5 = -7",
+      "target": 2,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -3x - 5 = -17\nAnswer with only the integer value of x.",
+      "equation": "-3x - 5 = -17",
+      "target": 4,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: x = 3\nAnswer with only the integer value of x.",
+      "equation": "x = 3",
+      "target": 3,
+      "raw_output": " 4",
+      "parsed_output": 4,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -4x - 5 = -29\nAnswer with only the integer value of x.",
+      "equation": "-4x - 5 = -29",
+      "target": 6,
+      "raw_output": " 1",
+      "parsed_output": 1,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: 2x + 1 = -11\nAnswer with only the integer value of x.",
+      "equation": "2x + 1 = -11",
+      "target": -6,
+      "raw_output": " 4",
+      "parsed_output": 4,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: x - 6 = -8\nAnswer with only the integer value of x.",
+      "equation": "x - 6 = -8",
+      "target": -2,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 1.0
+    },
+    {
+      "prompt": "Solve for x: -4x + 1 = 5\nAnswer with only the integer value of x.",
+      "equation": "-4x + 1 = 5",
+      "target": -1,
+      "raw_output": " 2",
+      "parsed_output": 2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -3x - 5 = -2\nAnswer with only the integer value of x.",
+      "equation": "-3x - 5 = -2",
+      "target": -1,
+      "raw_output": " -1",
+      "parsed_output": -1,
+      "reward": 1.0
+    },
+    {
+      "prompt": "Solve for x: 2x + 6 = 6\nAnswer with only the integer value of x.",
+      "equation": "2x + 6 = 6",
+      "target": 0,
+      "raw_output": " 2",
+      "parsed_output": 2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: x + 3 = 0\nAnswer with only the integer value of x.",
+      "equation": "x + 3 = 0",
+      "target": -3,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: x = -2\nAnswer with only the integer value of x.",
+      "equation": "x = -2",
+      "target": -2,
+      "raw_output": " -4",
+      "parsed_output": -4,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -3x - 1 = 8\nAnswer with only the integer value of x.",
+      "equation": "-3x - 1 = 8",
+      "target": -3,
+      "raw_output": " -4",
+      "parsed_output": -4,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -2x + 4 = -8\nAnswer with only the integer value of x.",
+      "equation": "-2x + 4 = -8",
+      "target": 6,
+      "raw_output": " 3",
+      "parsed_output": 3,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: 4x + 2 = -2\nAnswer with only the integer value of x.",
+      "equation": "4x + 2 = -2",
+      "target": -1,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -4x - 7 = -3\nAnswer with only the integer value of x.",
+      "equation": "-4x - 7 = -3",
+      "target": -1,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: x = 4\nAnswer with only the integer value of x.",
+      "equation": "x = 4",
+      "target": 4,
+      "raw_output": " 6",
+      "parsed_output": 6,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -3x + 2 = 8\nAnswer with only the integer value of x.",
+      "equation": "-3x + 2 = 8",
+      "target": -2,
+      "raw_output": " -6",
+      "parsed_output": -6,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -x + 4 = -3\nAnswer with only the integer value of x.",
+      "equation": "-x + 4 = -3",
+      "target": 7,
+      "raw_output": " 0",
+      "parsed_output": 0,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: 3x = -12\nAnswer with only the integer value of x.",
+      "equation": "3x = -12",
+      "target": -4,
+      "raw_output": " -4",
+      "parsed_output": -4,
+      "reward": 1.0
+    },
+    {
+      "prompt": "Solve for x: -2x = 2\nAnswer with only the integer value of x.",
+      "equation": "-2x = 2",
+      "target": -1,
+      "raw_output": " -2",
+      "parsed_output": -2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: 2x + 3 = 11\nAnswer with only the integer value of x.",
+      "equation": "2x + 3 = 11",
+      "target": 4,
+      "raw_output": " 2",
+      "parsed_output": 2,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: -x + 8 = 12\nAnswer with only the integer value of x.",
+      "equation": "-x + 8 = 12",
+      "target": -4,
+      "raw_output": " -3",
+      "parsed_output": -3,
+      "reward": 0.0
+    },
+    {
+      "prompt": "Solve for x: 3x - 7 = -25\nAnswer with only the integer value of x.",
+      "equation": "3x - 7 = -25",
+      "target": -6,
+      "raw_output": " -1",
+      "parsed_output": -1,
+      "reward": 0.0
+    }
+  ]
+}
