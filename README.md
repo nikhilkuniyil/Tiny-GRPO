@@ -25,11 +25,11 @@ SFT-only baseline on the same held-out task.
 
 Using a fixed 32-example held-out set, the current repo produces:
 
-| Stage | Model source | Accuracy | Parse rate |
-|---|---|---:|---:|
-| Base | `HuggingFaceTB/SmolLM2-135M` | `0.031` | `1.000` |
-| SFT | `artifacts/sft_model` | `0.031` | `1.000` |
-| GRPO | `artifacts/grpo_model` | `0.156` | `1.000` |
+| Stage | Model source | Accuracy | Average reward | Parse rate | Invalid output rate |
+|---|---|---:|---:|---:|---:|
+| Base | `HuggingFaceTB/SmolLM2-135M` | `0.03125` | `0.03125` | `1.0` | `0.0` |
+| SFT | `artifacts/sft_model` | `0.03125` | `0.03125` | `1.0` | `0.0` |
+| GRPO | `artifacts/grpo_model` | `0.15625` | `0.15625` | `1.0` | `0.0` |
 
 At the moment, most of the gain comes from GRPO improving answer selection on
 top of a weak-but-format-aligned SFT checkpoint.
