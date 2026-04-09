@@ -27,12 +27,13 @@ Using a fixed 32-example held-out set, the current repo produces:
 
 | Stage | Model source | Accuracy | Average reward | Parse rate | Invalid output rate |
 |---|---|---:|---:|---:|---:|
-| Base | `HuggingFaceTB/SmolLM2-135M` | `0.03125` | `0.03125` | `1.0` | `0.0` |
-| SFT | `artifacts/sft_model` | `0.03125` | `0.03125` | `1.0` | `0.0` |
+| Base | `HuggingFaceTB/SmolLM2-135M` | `0.09375` | `0.09375` | `0.625` | `0.375` |
+| SFT | `artifacts/sft_model` | `0.09375` | `0.09375` | `1.0` | `0.0` |
 | GRPO | `artifacts/grpo_model` | `0.15625` | `0.15625` | `1.0` | `0.0` |
 
-At the moment, most of the gain comes from GRPO improving answer selection on
-top of a weak-but-format-aligned SFT checkpoint.
+At the moment, base and SFT are tied on exact-match accuracy, but SFT makes the
+outputs consistently parseable. The main measured gain comes from GRPO
+improving answer selection on top of that format-aligned SFT checkpoint.
 
 ## Project structure
 
@@ -63,7 +64,7 @@ Solve for x: -3x + 7 = -11
 The gold answer is computed directly from the equation parameters, and the
 reward is:
 
-- `1.0` if the first valid integer in the model response matches the true answer
+- `1.0` if the generated completion matches a strict answer-like format and the parsed integer matches the true answer
 - `0.0` otherwise
 
 That keeps the training signal simple and makes the GRPO loop easy to explain.
@@ -141,7 +142,7 @@ This script:
 
 - generates and saves a fixed prompt set in `artifacts/eval_prompts.json`
 - runs the current model on those prompts
-- parses the first integer from each response
+- scores only the generated completion, not the prompt text
 - computes exact-match reward and summary metrics
 - saves the full result set in `artifacts/base_eval.json`
 
@@ -192,6 +193,7 @@ showing whether it actually improves exact-match accuracy on this toy task.
 4. Reuse that rollout batch for multiple update epochs and minibatches.
 5. Save the latest GRPO checkpoint.
 6. Save rollout/update metrics to `artifacts/grpo_training_log.json`.
+7. Run held-out GRPO evaluation during training and record the eval metrics.
 
 This makes it easy to vary `GRPO.num_outer_steps` in `config.py` and compare:
 
@@ -203,9 +205,9 @@ Suggested workflow:
 
 ```bash
 python3 train_grpo.py
-python3 eval.py --stage grpo --num-examples 32 --overwrite-eval-set
+python3 summarize_results.py
 ```
 
 If you want to study scaling with outer steps, change `GRPO.num_outer_steps`,
-rerun training, and compare the resulting `artifacts/grpo_training_log.json`
-and `artifacts/grpo_eval.json`.
+rerun training, and compare the resulting `artifacts/grpo_training_log.json`,
+`artifacts/grpo_eval.json`, and summary output.
